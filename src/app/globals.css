@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-ivory text-navy antialiased;
+  font-size: 18px;
+  line-height: 1.55;
+  min-height: 100dvh;
+}
+
+/* Strong, visible focus ring for keyboard and switch users. */
+:focus-visible {
+  outline: 3px solid #564a96;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-card bg-white shadow-card border border-line/70;
+  }
+  .field {
+    @apply w-full rounded-2xl border-2 border-line bg-white px-4 py-3.5 text-lg text-navy placeholder:text-navy-faint
+      transition focus:border-lavender focus:outline-none focus:ring-4 focus:ring-lavender/20;
+  }
+  .label {
+    @apply mb-1.5 block text-base font-semibold text-navy;
+  }
+  .eyebrow {
+    @apply text-sm font-semibold uppercase tracking-[0.14em] text-lavender-deep;
+  }
+}
+
+/* Subtle paper grain for warmth (pure CSS, no image). */
+.grain {
+  background-image: radial-gradient(rgba(32, 43, 64, 0.035) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
