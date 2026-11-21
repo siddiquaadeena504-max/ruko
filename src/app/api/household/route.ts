@@ -55,12 +55,12 @@ export const POST = handle(async (req: Request) => {
 });
 
 export const GET = handle(async (req: Request) => {
-  const hh = requireDevice(req);
-  return ok({ household: read((db) => toHousehold(db, hh)) });
+  const hh = await requireDevice(req);
+  return ok({ household: await read((db) => toHousehold(db, hh)) });
 });
 
 export const PATCH = handle(async (req: Request) => {
-  const hh = requireDevice(req);
+  const hh = await requireDevice(req);
   const body = await readJson(req);
   const household = await write((db) => {
     const h = db.households.find((x) => x.id === hh.id)!;
@@ -79,7 +79,7 @@ export const PATCH = handle(async (req: Request) => {
 
 /** Permanently delete everything for this household: contacts, sessions, alerts, outbox. */
 export const DELETE = handle(async (req: Request) => {
-  const hh = requireDevice(req);
+  const hh = await requireDevice(req);
   await write((db) => {
     db.households = db.households.filter((h) => h.id !== hh.id);
     db.contacts = db.contacts.filter((c) => c.householdId !== hh.id);

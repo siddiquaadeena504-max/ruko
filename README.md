@@ -24,6 +24,21 @@ You don't need any API keys. Without them Ruko runs in **demo notification mode*
 | Family dashboard with sample data | `/family` → **Explore with sample data** |
 | Pair a real household | Elder: Settings → *Connect family dashboard* → 6-digit code. Family: dashboard → enter the code |
 
+## Deploy to Vercel
+
+1. **Import the repo** at [vercel.com/new](https://vercel.com/new). Framework: Next.js; no build settings to change.
+2. **Add storage:** Project → **Storage** → **Upstash for Redis** (free tier) → connect it to the project.
+   This sets `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` / `KV_REST_API_TOKEN`).
+3. **Add an encryption key:** Project → Settings → Environment Variables → `RUKO_ENCRYPTION_KEY`, value from:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+   Keep it safe — changing it later makes existing contacts unreadable.
+4. Optional: `RUKO_PUBLIC_URL` (your Vercel URL, for SMS acknowledgement links) and the Twilio variables for real SMS.
+5. **Redeploy** so the new variables apply.
+
+Voice input needs HTTPS, which Vercel provides. The guided demo (`/help?demo=1`) works even before steps 2–3.
+
 ## Architecture
 
 ```
@@ -43,7 +58,7 @@ src/
     i18n/                   7 languages: en, hi, ta, te, kn, ml, bn
     client/                 Device token, household context, Web Speech STT/TTS, demo script
     server/
-      db.ts                 JSON-file store, atomic writes, serialised queue (swap for Postgres)
+      db.ts                 Storage: Upstash Redis (production/Vercel) or local JSON file (dev)
       crypto.ts             AES-256-GCM field encryption, scrypt passwords, HMAC lookups
       auth.ts               Family cookie sessions + elder device bearer token
       alerts.ts             Alert creation, priority order, lazy escalation, acknowledgement
@@ -71,6 +86,7 @@ src/
 Copy `.env.example` to `.env.local`:
 
 - `RUKO_ENCRYPTION_KEY`: 64 hex characters. Required in production. In development, a key is generated in `.data/secret.key`.
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL`, `KV_REST_API_TOKEN`): Redis storage. Required on Vercel. Without them, data goes to `.data/` locally.
 - `RUKO_PUBLIC_URL`: base URL for acknowledgement links in SMS.
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`: turn on real SMS alerts.
 
@@ -78,5 +94,5 @@ Copy `.env.example` to `.env.local`:
 
 - Translations outside English were written for this prototype and **need review by native speakers**. Onboarding, settings and the family dashboard are in English. The elder-facing help flow is in all seven languages.
 - Web Speech recognition is best in Chrome/Edge (Android and desktop). Firefox has no speech recognition, so it falls back to buttons.
-- The JSON-file database suits a single server. Use Postgres for multi-instance deployments.
+- All data is stored as one Redis document with a short write lock. That's simple and safe at demo or pilot scale; for thousands of households, move to per-record keys or Postgres.
 - Keyword matching is a heuristic. It recognises known patterns only and cannot guarantee detection.

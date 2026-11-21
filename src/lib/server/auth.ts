@@ -43,7 +43,7 @@ export async function currentUser(): Promise<UserRecord | null> {
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
   const h = hashToken(token);
-  return read((db) => {
+  return await read((db) => {
     const s = db.authSessions.find((x) => x.tokenHash === h && new Date(x.expiresAt) > new Date());
     return s ? db.users.find((u) => u.id === s.userId) ?? null : null;
   });
@@ -57,26 +57,26 @@ export async function requireUser(): Promise<UserRecord> {
 
 /* ---------- Elder device (bearer token in header) ---------- */
 
-export function deviceHousehold(req: Request): HouseholdRecord | null {
+export async function deviceHousehold(req: Request): Promise<HouseholdRecord | null> {
   const token = req.headers.get("x-ruko-device");
   if (!token) return null;
   const h = hashToken(token);
-  return read((db) => db.households.find((x) => safeEqualHex(x.deviceTokenHash, h)) ?? null);
+  return await read((db) => db.households.find((x) => safeEqualHex(x.deviceTokenHash, h)) ?? null);
 }
 
-export function requireDevice(req: Request): HouseholdRecord {
-  const hh = deviceHousehold(req);
+export async function requireDevice(req: Request): Promise<HouseholdRecord> {
+  const hh = await deviceHousehold(req);
   if (!hh) throw new HttpError(401, "This device is not set up. Please open Ruko's setup again.");
   return hh;
 }
 
 /** A household is accessible by its own device or by a linked family account. */
 export async function requireHouseholdAccess(req: Request, householdId: string): Promise<{ household: HouseholdRecord; userId?: string }> {
-  const dev = deviceHousehold(req);
+  const dev = await deviceHousehold(req);
   if (dev && dev.id === householdId) return { household: dev };
   const user = await currentUser();
   if (user) {
-    const hh = read((db) => db.households.find((h) => h.id === householdId));
+    const hh = await read((db) => db.households.find((h) => h.id === householdId));
     if (hh && hh.linkedUserIds.includes(user.id)) return { household: hh, userId: user.id };
   }
   throw new HttpError(403, "You don't have access to this household");

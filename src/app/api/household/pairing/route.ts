@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Generates a 6-digit code (valid 15 minutes) a family member enters to link their dashboard. */
 export const POST = handle(async (req: Request) => {
-  const hh = requireDevice(req);
+  const hh = await requireDevice(req);
   const code = randomDigits(6);
   const expiresAt = new Date(Date.now() + 15 * 60_000).toISOString();
   await write((db) => {

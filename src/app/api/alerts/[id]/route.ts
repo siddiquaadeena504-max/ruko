@@ -10,9 +10,9 @@ type Ctx = { params: Promise<{ id: string }> };
 /** Returns alert status. Reading also advances escalation if the current contact hasn't responded. */
 export const GET = handle(async (req: Request, ctx: Ctx) => {
   const { id } = await ctx.params;
-  const householdId = read((db) => db.alerts.find((a) => a.id === id)?.householdId);
+  const householdId = await read((db) => db.alerts.find((a) => a.id === id)?.householdId);
   if (!householdId) throw new HttpError(404, "Alert not found");
   await requireHouseholdAccess(req, householdId);
   await processEscalations(householdId);
-  return ok({ alert: read((db) => toAlert(db, db.alerts.find((a) => a.id === id)!)) });
+  return ok({ alert: await read((db) => toAlert(db, db.alerts.find((a) => a.id === id)!)) });
 });

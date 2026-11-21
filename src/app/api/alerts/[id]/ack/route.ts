@@ -12,12 +12,12 @@ type Ctx = { params: Promise<{ id: string }> };
 export const POST = handle(async (_req: Request, ctx: Ctx) => {
   const user = await requireUser();
   const { id } = await ctx.params;
-  const allowed = read((db) => {
+  const allowed = await read((db) => {
     const a = db.alerts.find((x) => x.id === id);
     const h = a && db.households.find((x) => x.id === a.householdId);
     return Boolean(h?.linkedUserIds.includes(user.id));
   });
   if (!allowed) throw new HttpError(404, "Alert not found");
   await acknowledgeAlert(id, decrypt(user.nameEnc));
-  return ok({ alert: read((db) => toAlert(db, db.alerts.find((a) => a.id === id)!)) });
+  return ok({ alert: await read((db) => toAlert(db, db.alerts.find((a) => a.id === id)!)) });
 });

@@ -17,7 +17,7 @@ const LEVELS: RiskLevel[] = ["high", "possible", "unclear"];
  * If `sendAlert` is true (the person consented), alerts trusted contacts.
  */
 export const POST = handle(async (req: Request) => {
-  const hh = requireDevice(req);
+  const hh = await requireDevice(req);
   const body = await readJson(req);
   const level = body.level as RiskLevel;
   if (!LEVELS.includes(level)) throw new HttpError(400, "Invalid level");
@@ -49,7 +49,7 @@ export const POST = handle(async (req: Request) => {
   }
 
   return ok(
-    read((db) => ({
+    await read((db) => ({
       session: toSession(db.sessions.find((s) => s.id === sessionId)!),
       alert: alertId ? toAlert(db, db.alerts.find((a) => a.id === alertId)!) : null,
     })),

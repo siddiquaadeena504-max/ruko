@@ -14,7 +14,7 @@ export const POST = handle(async (req: Request) => {
   const alertId = raw.slice(0, dot);
   const secret = raw.slice(dot + 1);
   if (dot < 1 || !secret) throw new HttpError(400, "This link is not valid.");
-  const found = read((db) => {
+  const found = await read((db) => {
     const a = db.alerts.find((x) => x.id === alertId);
     if (!a || !safeEqualHex(a.ackTokenHash, hashToken(secret))) return null;
     const h = db.households.find((x) => x.id === a.householdId);

@@ -10,7 +10,7 @@ export const POST = handle(async (req: Request) => {
   const body = await readJson(req);
   const email = str(body.email, "Email", { max: 120 });
   const password = str(body.password, "Password", { max: 200 });
-  const user = read((db) => db.users.find((u) => u.emailHash === lookupHash(email)));
+  const user = await read((db) => db.users.find((u) => u.emailHash === lookupHash(email)));
   if (!user || !verifyPassword(password, user.passwordHash)) throw new HttpError(401, "Email or password is incorrect");
   await startSession(user.id);
   return ok({ ok: true });

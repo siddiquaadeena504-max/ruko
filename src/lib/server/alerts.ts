@@ -1,5 +1,5 @@
 import "server-only";
-import { decrypt, randomId } from "./crypto";
+import { decrypt, encrypt, randomId } from "./crypto";
 import { read, write, type AlertRecord, type DBShape } from "./db";
 import { maskPhone } from "./http";
 import { getNotificationProvider } from "./notify";
@@ -52,7 +52,7 @@ async function sendToNext(db: DBShape, alert: AlertRecord, ackToken: string | nu
         alertId: alert.id,
         householdId: alert.householdId,
         toMasked: maskPhone(phone),
-        body,
+        bodyEnc: encrypt(body),
         createdAt: new Date().toISOString(),
       });
       db.outbox = db.outbox.slice(0, 100);
@@ -107,7 +107,7 @@ export async function processEscalations(householdId: string) {
     const last = a.deliveries[a.deliveries.length - 1];
     return !last || now - new Date(last.attemptedAt).getTime() >= a.escalateAfterSec * 1000;
   };
-  const needed = read((db) => db.alerts.some((a) => a.householdId === householdId && due(a)));
+  const needed = await read((db) => db.alerts.some((a) => a.householdId === householdId && due(a)));
   if (!needed) return;
   await write(async (db) => {
     for (const a of db.alerts) {

@@ -102,7 +102,7 @@ export const POST = handle(async (req: Request) => {
       alertId: alerts[0].id,
       householdId: hhId,
       toMasked: maskPhone(contacts[0].phone),
-      body: "Ruko Alert: A possible digital arrest scam was detected during a help session with Lakshmi Amma. Please contact them using a trusted number you already know.",
+      bodyEnc: encrypt("Ruko Alert: A possible digital arrest scam was detected during a help session with Lakshmi Amma. Please contact them using a trusted number you already know."),
       createdAt: iso(3 * 60_000),
     });
   });
